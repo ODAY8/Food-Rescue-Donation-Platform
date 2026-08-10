@@ -158,12 +158,156 @@ async function main() {
         ],
     });
 
+    // ── Version 2.0 seed data ──────────────────────────────────────────────
+    // Expiry predictions (deterministic rule result; the live system calls
+    // expiryPredictionService in Phase B). Uses the same logic shape as the
+    // rule engine so predictions are consistent for demo data.
+    const ruleScore = (food) => {
+        const nowMs = Date.now();
+        const expiryMs = food.expiryDate.getTime();
+        const total = expiryMs - nowMs;
+        const fraction = total <= 0 ? 1 : Math.min(1, Math.max(0, 1 - total / (48 * 60 * 60 * 1000)));
+        return { fraction, remainingDays: total / (24 * 60 * 60 * 1000) };
+    };
+
+    for (const f of foods) {
+        const s = ruleScore(f);
+        let urgency = "LOW";
+        let risk = Math.round(s.fraction * 100);
+        if (s.remainingDays <= 1) { urgency = "CRITICAL"; risk = Math.max(risk, 85); }
+        else if (s.remainingDays <= 2) { urgency = "HIGH"; risk = Math.max(risk, 65); }
+        else if (s.remainingDays <= 4) { urgency = "MEDIUM"; risk = Math.max(risk, 40); }
+        await prisma.expiryPrediction.upsert({
+            where: { foodId: f.id },
+            update: {},
+            create: {
+                foodId: f.id,
+                featuresHash: `seed-${f.id}`,
+                urgency,
+                riskScore: Math.min(100, risk),
+                recommendation: urgency === "CRITICAL" || urgency === "HIGH"
+                    ? "Donate immediately — remaining shelf life is short."
+                    : "Donate within the recommended window.",
+                explanation: { factors: ["short remaining shelf life", "food category", "storage conditions"], basis: "rule-based" },
+                model: "rules",
+            },
+        });
+    }
+
+    // Inventory items + a transaction history example (100 kg → 70 kg after donation)
+    // Use a deterministic lookup instead: find or create per donor+name
+    const findOrCreateInv = async ({ donorId, name, category, quantity, unit, expiryDate, preparationDate, storageCondition, location }) => {
+        const existing = await prisma.inventoryItem.findFirst({ where: { donorId, name } });
+        if (existing) return existing;
+        return prisma.inventoryItem.create({
+            data: { donorId, name, category, quantity, unit, expiryDate, preparationDate, storageCondition, location },
+        });
+    };
+
+    const invRice = await findOrCreateInv({
+        donorId: donors[0].id, name: "Cooked Rice", category: "Prepared", quantity: 100, unit: "kg",
+        expiryDate: inDays(1), preparationDate: new Date(), storageCondition: "REFRIGERATED", location: "Nairobi",
+    });
+    const invVeg = await findOrCreateInv({
+        donorId: donors[0].id, name: "Fresh Vegetables", category: "Produce", quantity: 40, unit: "kg",
+        expiryDate: inDays(3), preparationDate: new Date(), storageCondition: "ROOM_TEMP", location: "Nairobi",
+    });
+    const invCanned = await findOrCreateInv({
+        donorId: donors[1].id, name: "Canned Beans", category: "Pantry", quantity: 200, unit: "cans",
+        expiryDate: inDays(90), preparationDate: null, storageCondition: "ROOM_TEMP", location: "Mombasa",
+    });
+
+    // History: Rice donated 30 kg → remaining 70 kg (matching the acceptance workflow)
+    const invTxExists = await prisma.inventoryTransaction.findFirst({ where: { itemId: invRice.id, type: "DONATE" } });
+    if (!invTxExists) {
+        const foodListing = await prisma.food.create({
+            data: {
+                donorId: donors[0].id,
+                title: "Cooked Rice (from inventory)",
+                description: "Surplus cooked rice donated from inventory.",
+                category: "Prepared",
+                quantity: 30,
+                unit: "kg",
+                servings: 30,
+                expiryDate: invRice.expiryDate,
+                pickupLocation: donors[0].address || "12 Riverside Ave",
+                pickupWindow: "10am–2pm",
+                city: "Nairobi",
+                latitude: -1.2921,
+                longitude: 36.8219,
+                preparationDate: invRice.preparationDate,
+                storageCondition: "REFRIGERATED",
+            },
+        });
+        await prisma.$transaction([
+            prisma.inventoryItem.update({
+                where: { id: invRice.id },
+                data: { quantity: 70, status: "PARTIAL" },
+            }),
+            prisma.inventoryTransaction.create({
+                data: {
+                    itemId: invRice.id,
+                    type: "DONATE",
+                    quantityChange: -30,
+                    quantityBefore: 100,
+                    quantityAfter: 70,
+                    note: "Seeded donation of 30 kg",
+                    foodId: foodListing.id,
+                },
+            }),
+        ]);
+    }
+
+    // Scheduled donation (future pickup) for the milk donation
+    const scheduleExists = await prisma.scheduledDonation.findFirst({ where: { donorId: donors[1].id } });
+    if (!scheduleExists) {
+        await prisma.scheduledDonation.create({
+            data: {
+                donorId: donors[1].id,
+                foodId: foods[3].id,
+                donationId: scheduled.id,
+                ngoId: ngos[2].id,
+                scheduledFor: inDays(1),
+                status: "SCHEDULED",
+                notes: "Seeded scheduled pickup",
+            },
+        });
+    }
+
+    // QR code for the scheduled (pickup-scheduled) donation
+    const qrExists = await prisma.donationCode.findFirst({ where: { donationId: scheduled.id } });
+    if (!qrExists) {
+        const { randomBytes } = require("crypto");
+        await prisma.donationCode.create({
+            data: {
+                donationId: scheduled.id,
+                code: "FRD-" + randomBytes(16).toString("hex"),
+                expiresAt: inDays(7),
+                createdBy: donors[1].id,
+            },
+        });
+    }
+
+    // Platform events (search + language usage samples)
+    const eventCount = await prisma.platformEvent.count();
+    if (eventCount === 0) {
+        await prisma.platformEvent.createMany({
+            data: [
+                { type: "SEARCH", userId: ngos[0].id, metadata: { query: "rice", filters: { category: "Prepared" }, results: 3 } },
+                { type: "SEARCH", userId: ngos[1].id, metadata: { query: "milk", filters: {}, results: 1 } },
+                { type: "LANGUAGE_CHANGE", userId: donors[0].id, metadata: { lang: "hi" } },
+                { type: "LANGUAGE_CHANGE", userId: donors[0].id, metadata: { lang: "en" } },
+            ],
+        });
+    }
+
     console.log("✔ Seed complete:");
     console.log(`  Admin:  ${admin.email} / ${PASSWORD}`);
     console.log(`  Donors: ${donors.map((d) => d.email).join(", ")}`);
     console.log(`  NGOs:   ${ngos.map((n) => n.email).join(", ")}`);
     console.log(`  Foods:  ${foods.length} listings, ${claimed.title} marked CLAIMED`);
     console.log(`  Donations: completed=${done.id} pending=${pending.id} scheduled=${scheduled.id}`);
+    console.log(`  V2: predictions=${foods.length}, inventory items created, schedule + QR seeded`);
     console.log(`  Password for all seeded users: ${PASSWORD}`);
 }
 

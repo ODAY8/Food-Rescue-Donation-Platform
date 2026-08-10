@@ -50,6 +50,55 @@ enum NotificationType {
   ACTION
 }
 
+enum StorageCondition {
+  ROOM_TEMP
+  REFRIGERATED
+  FROZEN
+}
+
+enum PackagingType {
+  OPEN
+  SEALED
+  VACUUM_SEALED
+  CANNED
+}
+
+enum UrgencyLevel {
+  LOW
+  MEDIUM
+  HIGH
+  CRITICAL
+}
+
+enum InventoryStatus {
+  IN_STOCK
+  PARTIAL
+  DONATED
+  EXPIRED
+  REMOVED
+}
+
+enum InventoryTransactionType {
+  ADD
+  ADJUST
+  DONATE
+  EXPIRE
+  REMOVE
+}
+
+enum ScheduledDonationStatus {
+  SCHEDULED
+  CLAIMED
+  COMPLETED
+  CANCELLED
+}
+
+enum PlatformEventType {
+  SEARCH
+  RECOGNITION
+  LANGUAGE_CHANGE
+}
+
 // ─── Models ───────────────────────────────────────────────────────────────────
 
 model User {
@@ -61,14 +110,19 @@ model User {
   phone        String?  @db.VarChar(20)
   address      String?  @db.VarChar(255)
   organization String?  @db.VarChar(150)
+  latitude     Float?
+  longitude    Float?
   createdAt    DateTime @default(now()) @map("created_at")
   updatedAt    DateTime @updatedAt @map("updated_at")
 
   // Relations
-  foods              Food[]         @relation("DonorFoods")
-  donationsDonated   Donation[]     @relation("DonorDonations")
-  donationsReceived  Donation[]     @relation("NgoDonations")
+  foods              Food[]                @relation("DonorFoods")
+  donationsDonated   Donation[]            @relation("DonorDonations")
+  donationsReceived  Donation[]            @relation("NgoDonations")
   notifications      Notification[]
+  inventory          InventoryItem[]        @relation("DonorInventory")
+  schedulesDonated   ScheduledDonation[]   @relation("DonorSchedules")
+  schedulesReceived  ScheduledDonation[]   @relation("NgoSchedules")
 
   @@map("users")
 }
@@ -88,18 +142,27 @@ model Food {
   city           String       @default("") @db.VarChar(100)
   latitude       Float?
   longitude      Float?
-  imageUrl       String       @default("") @map("image_url") @db.Text
-  status         FoodStatus   @default(AVAILABLE)
-  createdAt      DateTime     @default(now()) @map("created_at")
-  updatedAt      DateTime     @updatedAt @map("updated_at")
+  imageUrl       String            @default("") @map("image_url") @db.Text
+  status         FoodStatus        @default(AVAILABLE)
+  // Version 2.0 — expiry prediction inputs (optional; V1 behavior unchanged)
+  preparationDate DateTime?        @map("preparation_date")
+  storageCondition StorageCondition?
+  packaging       PackagingType?
+  temperature    Float?
+  createdAt      DateTime          @default(now()) @map("created_at")
+  updatedAt      DateTime          @updatedAt @map("updated_at")
 
   // Relations
-  donor     User       @relation("DonorFoods", fields: [donorId], references: [id], onDelete: Cascade)
-  donations Donation[]
+  donor             User               @relation("DonorFoods", fields: [donorId], references: [id], onDelete: Cascade)
+  donations         Donation[]
+  expiryPrediction  ExpiryPrediction?
+  inventoryTransactions InventoryTransaction[]
+  scheduledDonation ScheduledDonation?
 
   @@index([donorId])
   @@index([status])
   @@index([expiryDate])
+  @@index([status, expiryDate])
   @@index([city])
   @@map("foods")
 }
@@ -124,6 +187,8 @@ model Donation {
   food  Food @relation(fields: [foodId], references: [id], onDelete: Cascade)
   donor User @relation("DonorDonations", fields: [donorId], references: [id], onDelete: Cascade)
   ngo   User @relation("NgoDonations", fields: [ngoId], references: [id], onDelete: Cascade)
+  codes              DonationCode[]
+  scheduledDonation  ScheduledDonation? @relation("DonationSchedule")
 
   @@index([foodId, status])
   @@index([foodId])
@@ -149,4 +214,116 @@ model Notification {
   @@index([userId])
   @@index([userId, isRead])
   @@map("notifications")
+}
+
+// ─── Version 2.0 models ────────────────────────────────────────────────────────
+
+model ExpiryPrediction {
+  id              String       @id @default(uuid()) @db.Uuid
+  foodId          String       @unique @map("food_id") @db.Uuid
+  featuresHash    String       @map("features_hash") @db.VarChar(64)
+  urgency         UrgencyLevel
+  riskScore       Int
+  recommendation  String       @db.VarChar(255)
+  explanation     Json
+  model           String       @db.VarChar(100)
+  createdAt       DateTime     @default(now()) @map("created_at")
+  updatedAt       DateTime     @updatedAt @map("updated_at")
+
+  food Food @relation(fields: [foodId], references: [id], onDelete: Cascade)
+
+  @@index([urgency])
+  @@map("expiry_predictions")
+}
+
+model DonationCode {
+  id            String    @id @default(uuid()) @db.Uuid
+  donationId    String    @map("donation_id") @db.Uuid
+  code          String    @unique @db.VarChar(48)
+  expiresAt     DateTime? @map("expires_at")
+  scansCount    Int       @default(0) @map("scans_count")
+  lastScannedAt DateTime? @map("last_scanned_at")
+  createdBy     String    @map("created_by") @db.Uuid
+  createdAt     DateTime  @default(now()) @map("created_at")
+
+  donation Donation @relation(fields: [donationId], references: [id], onDelete: Cascade)
+
+  @@index([donationId])
+  @@map("donation_codes")
+}
+
+model InventoryItem {
+  id               String           @id @default(uuid()) @db.Uuid
+  donorId          String           @map("donor_id") @db.Uuid
+  name             String           @db.VarChar(150)
+  category         FoodCategory     @default(Other)
+  quantity         Float
+  unit             String           @default("kg") @db.VarChar(30)
+  preparationDate  DateTime?        @map("preparation_date")
+  expiryDate       DateTime         @map("expiry_date")
+  storageCondition StorageCondition? @map("storage_condition")
+  location         String           @default("") @db.VarChar(100)
+  status           InventoryStatus  @default(IN_STOCK)
+  createdAt        DateTime         @default(now()) @map("created_at")
+  updatedAt        DateTime         @updatedAt @map("updated_at")
+
+  donor        User                   @relation("DonorInventory", fields: [donorId], references: [id], onDelete: Cascade)
+  transactions InventoryTransaction[]
+
+  @@index([donorId, status])
+  @@index([expiryDate])
+  @@map("inventory_items")
+}
+
+model InventoryTransaction {
+  id             String                   @id @default(uuid()) @db.Uuid
+  itemId         String                   @map("item_id") @db.Uuid
+  type           InventoryTransactionType
+  quantityChange Float                    @map("quantity_change")
+  quantityBefore Float                    @map("quantity_before")
+  quantityAfter  Float                    @map("quantity_after")
+  note           String?                  @db.VarChar(255)
+  foodId         String?                  @map("food_id") @db.Uuid
+  createdAt      DateTime                 @default(now()) @map("created_at")
+
+  item InventoryItem @relation(fields: [itemId], references: [id], onDelete: Cascade)
+  food Food?         @relation(fields: [foodId], references: [id], onDelete: SetNull)
+
+  @@index([itemId])
+  @@map("inventory_transactions")
+}
+
+model ScheduledDonation {
+  id             String                 @id @default(uuid()) @db.Uuid
+  donorId        String                 @map("donor_id") @db.Uuid
+  foodId         String                 @unique @map("food_id") @db.Uuid
+  donationId     String?                @unique @map("donation_id") @db.Uuid
+  ngoId          String?                @map("ngo_id") @db.Uuid
+  scheduledFor   DateTime               @map("scheduled_for")
+  status         ScheduledDonationStatus @default(SCHEDULED)
+  reminderSentAt DateTime?              @map("reminder_sent_at")
+  notes          String?                @db.VarChar(255)
+  createdAt      DateTime               @default(now()) @map("created_at")
+  updatedAt      DateTime               @updatedAt @map("updated_at")
+
+  donor    User      @relation("DonorSchedules", fields: [donorId], references: [id], onDelete: Cascade)
+  ngo      User?     @relation("NgoSchedules", fields: [ngoId], references: [id], onDelete: SetNull)
+  food     Food      @relation(fields: [foodId], references: [id], onDelete: Cascade)
+  donation Donation? @relation("DonationSchedule", fields: [donationId], references: [id], onDelete: SetNull)
+
+  @@index([donorId, status])
+  @@index([scheduledFor])
+  @@index([status])
+  @@map("scheduled_donations")
+}
+
+model PlatformEvent {
+  id        String            @id @default(uuid()) @db.Uuid
+  type      PlatformEventType
+  userId    String?           @map("user_id") @db.Uuid
+  metadata  Json?
+  createdAt DateTime          @default(now()) @map("created_at")
+
+  @@index([type, createdAt])
+  @@map("platform_events")
 }
