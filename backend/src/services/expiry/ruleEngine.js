@@ -22,10 +22,10 @@ const STORAGE_MULT = { ROOM_TEMP: 1.0, REFRIGERATED: 0.55, FROZEN: 0.15 };
 const PACKAGING_MULT = { OPEN: 1.0, SEALED: 0.75, VACUUM_SEALED: 0.5, CANNED: 0.3 };
 
 const URGENCY_THRESHOLDS = [
-    { max: 0.25, level: "CRITICAL" },
-    { max: 0.50, level: "HIGH" },
-    { max: 0.80, level: "MEDIUM" },
-    { max: Infinity, level: "LOW" },
+    { max: 0.25, level: "LOW" },
+    { max: 0.50, level: "MEDIUM" },
+    { max: 0.80, level: "HIGH" },
+    { max: Infinity, level: "CRITICAL" },
 ];
 
 const RECOMMENDATIONS = {
@@ -95,8 +95,8 @@ function computeRuleScore(food) {
     const raw =
         timeFactor * 0.50 +
         catFactor * 0.20 +
-        (1 - storageFactor) * 0.10 +
-        (1 - packagingFactor) * 0.10 +
+        storageFactor * 0.10 +
+        packagingFactor * 0.10 +
         tempFactor * 0.05 +
         prepFactor * 0.05;
 

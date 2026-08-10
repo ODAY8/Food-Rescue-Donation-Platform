@@ -9,8 +9,7 @@
     "migrate:dev": "prisma migrate dev",
     "seed": "node prisma/seed.js",
     "db:setup": "prisma migrate deploy && node prisma/seed.js",
-    "test": "vitest run",
-    "test:watch": "vitest"
+    "test": "node --test \"src/services/__tests__/*.test.js\""
   },
   "dependencies": {
     "@prisma/adapter-pg": "^7.9.1",
@@ -28,9 +27,7 @@
   },
   "devDependencies": {
     "nodemon": "^3.1.14",
-    "prisma": "^7.9.1",
-    "supertest": "^7.2.2",
-    "vitest": "^4.1.10"
+    "prisma": "^7.9.1"
   },
   "allowScripts": {
     "bcrypt@6.0.0": true,
