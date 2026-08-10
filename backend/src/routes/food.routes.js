@@ -31,6 +31,15 @@ const recognitionLimiter = rateLimit({
     message: { success: false, message: "Too many image recognition requests, please try again later." },
 });
 
+// V2: prediction-refresh rate limit (AI cost protection).
+const predictionLimiter = rateLimit({
+    windowMs: 15 * 60 * 1000,
+    limit: 30,
+    standardHeaders: true,
+    legacyHeaders: false,
+    message: { success: false, message: "Too many prediction requests, please try again later." },
+});
+
 // Public search (validated query) — registered before /:id
 router.get("/search",            validateQuery(searchQuerySchema), searchFoods);
 router.get("/recommendations",   protect, getRecommendations);
@@ -41,9 +50,9 @@ router.get("/",       getAllFoods);
 router.get("/my",     protect, getMyFoods);
 router.get("/:id",    getFoodById);
 
-// Prediction endpoints (cached GET; force-refresh POST)
+// Prediction endpoints (cached GET; rate-limited force-refresh POST)
 router.get("/:id/prediction",     getPrediction);
-router.post("/:id/expiry-prediction", protect, refreshPrediction);
+router.post("/:id/expiry-prediction", protect, predictionLimiter, refreshPrediction);
 
 // Donor only
 router.post("/",      protect, restrictTo("DONOR"), validate(createFoodSchema), createFood);
