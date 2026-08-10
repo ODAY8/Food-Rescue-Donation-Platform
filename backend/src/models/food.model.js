@@ -22,6 +22,11 @@ const FoodModel = {
                 latitude:       data.latitude ? parseFloat(data.latitude) : null,
                 longitude:      data.longitude ? parseFloat(data.longitude) : null,
                 imageUrl:       data.imageUrl || "",
+                // V2 prediction inputs (optional; V1 behavior unchanged)
+                preparationDate: data.preparationDate ? new Date(data.preparationDate) : null,
+                storageCondition: data.storageCondition || null,
+                packaging:       data.packaging || null,
+                temperature:     data.temperature !== undefined && data.temperature !== null && data.temperature !== "" ? parseFloat(data.temperature) : null,
             },
             include: { donor: { select: DONOR_SELECT } },
         }),
@@ -86,6 +91,7 @@ const FoodModel = {
             unit: true, servings: true, expiryDate: true, pickupLocation: true,
             pickupWindow: true, city: true, latitude: true, longitude: true,
             imageUrl: true, status: true,
+            preparationDate: true, storageCondition: true, packaging: true, temperature: true,
         };
         const updateData = Object.fromEntries(
             Object.entries(data).filter(([k]) => allowed[k])
@@ -95,6 +101,9 @@ const FoodModel = {
         if (updateData.servings)   updateData.servings   = parseInt(updateData.servings);
         if (updateData.latitude)   updateData.latitude   = parseFloat(updateData.latitude);
         if (updateData.longitude)  updateData.longitude  = parseFloat(updateData.longitude);
+        if (updateData.preparationDate) updateData.preparationDate = new Date(updateData.preparationDate);
+        if (updateData.temperature !== undefined && updateData.temperature !== null && updateData.temperature !== "")
+            updateData.temperature = parseFloat(updateData.temperature);
         return prisma.food.update({
             where: { id },
             data: updateData,

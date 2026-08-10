@@ -4,6 +4,7 @@ const express = require("express");
 const cors = require("cors");
 const helmet = require("helmet");
 const rateLimit = require("express-rate-limit");
+const path = require("path");
 
 const routes = require("./routes");
 const { notFound } = require("./middleware/notFound.middleware");
@@ -11,8 +12,8 @@ const { errorHandler } = require("./middleware/error.middleware");
 
 const app = express();
 
-// Security headers
-app.use(helmet());
+// Security headers — allow cross-origin resource policy for uploaded images
+app.use(helmet({ crossOriginResourcePolicy: { policy: "cross-origin" } }));
 
 // CORS — only allow the configured frontend origin
 app.use(cors({
@@ -40,6 +41,18 @@ app.use("/api/auth", rateLimit({
 
 app.use(express.json({ limit: "10kb" })); // guard against large payloads
 app.use(express.urlencoded({ extended: false }));
+
+// Static food images (uploaded to local disk). Not publicly browsable
+// (dotfiles denied) and served with no-sniff headers.
+const { ABS_UPLOAD_DIR } = require("./config/multer");
+app.use(
+    "/uploads",
+    express.static(ABS_UPLOAD_DIR, {
+        dotfiles: "deny",
+        index: false,
+        setHeaders: (res) => res.setHeader("X-Content-Type-Options", "nosniff"),
+    })
+);
 
 app.use("/", routes);
 

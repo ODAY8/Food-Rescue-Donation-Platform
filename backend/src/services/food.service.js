@@ -1,9 +1,9 @@
 const FoodModel = require("../models/food.model");
 
 const createFood = async (body, userId) => {
-    const { title, description, quantity, servings, expiryDate, category, city, pickupLocation, pickupAddress, pickupWindow, latitude, longitude, imageUrl } = body;
+    const { title, description, quantity, servings, expiryDate, category, city, pickupLocation, pickupAddress, pickupWindow, latitude, longitude, imageUrl, preparationDate, storageCondition, packaging, temperature } = body;
     const food = await FoodModel.create(
-        { title, description, quantity, servings, expiryDate, category, city, pickupLocation, pickupAddress, pickupWindow, latitude, longitude, imageUrl },
+        { title, description, quantity, servings, expiryDate, category, city, pickupLocation, pickupAddress, pickupWindow, latitude, longitude, imageUrl, preparationDate, storageCondition, packaging, temperature },
         userId
     );
     return { success: true, data: food };

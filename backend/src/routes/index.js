@@ -9,6 +9,8 @@ const userRoutes         = require("./user.routes");
 const notificationRoutes = require("./notification.routes");
 const analyticsRoutes    = require("./analytics.routes");
 const adminRoutes        = require("./admin.routes");
+const inventoryRoutes    = require("./inventory.routes");
+const uploadRoutes       = require("./upload.routes");
 
 router.get("/", getHome);
 
@@ -19,5 +21,7 @@ router.use("/api/users",         userRoutes);
 router.use("/api/notifications", notificationRoutes);
 router.use("/api/analytics",     analyticsRoutes);
 router.use("/api/admin",         adminRoutes);
+router.use("/api/inventory",     inventoryRoutes);
+router.use("/api/uploads",       uploadRoutes);
 
 module.exports = router;
