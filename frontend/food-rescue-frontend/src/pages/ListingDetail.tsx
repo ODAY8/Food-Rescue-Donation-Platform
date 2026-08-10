@@ -6,6 +6,7 @@ import PageWrapper from '../components/layout/PageWrapper';
 import Button from '../components/ui/Button';
 import Badge from '../components/ui/Badge';
 import Modal from '../components/ui/Modal';
+import ExpiryPredictionCard from '../components/food/ExpiryPredictionCard';
 import { useToast } from '../hooks/useToast';
 import { useAuth } from '../context/AuthContext';
 import { foodApi } from '../services/foodApi';
@@ -134,6 +135,11 @@ export default function ListingDetail() {
               </Button>
             )}
           </motion.div>
+        </div>
+
+        {/* V2: AI expiry prediction */}
+        <div className="mt-8">
+          <ExpiryPredictionCard foodId={food.id} />
         </div>
       </div>
 

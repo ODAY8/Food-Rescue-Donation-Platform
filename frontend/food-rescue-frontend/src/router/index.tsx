@@ -12,6 +12,13 @@ import NotificationsPage from '../pages/NotificationsPage';
 import ProfilePage from '../pages/ProfilePage';
 import AnalyticsPage from '../pages/AnalyticsPage';
 import MapPage from '../pages/MapPage';
+import DonorFoodCreate from '../pages/DonorFoodCreate';
+import InventoryPage from '../pages/InventoryPage';
+import InventoryHistoryPage from '../pages/InventoryHistoryPage';
+import ScheduledDonations from '../pages/ScheduledDonations';
+import DonorQR from '../pages/DonorQR';
+import NgoScanner from '../pages/NgoScanner';
+import V2AnalyticsPage from '../pages/V2AnalyticsPage';
 import ProtectedRoute from '../components/shared/ProtectedRoute';
 
 export default function AppRouter() {
@@ -32,10 +39,35 @@ export default function AppRouter() {
           </ProtectedRoute>
         } />
 
+        {/* V2 donor pages */}
+        <Route path="/donor/food/new" element={
+          <ProtectedRoute allowedRoles={['DONOR']}><DonorFoodCreate /></ProtectedRoute>
+        } />
+        <Route path="/donor/inventory" element={
+          <ProtectedRoute allowedRoles={['DONOR']}><InventoryPage /></ProtectedRoute>
+        } />
+        <Route path="/donor/inventory/history" element={
+          <ProtectedRoute allowedRoles={['DONOR']}><InventoryHistoryPage /></ProtectedRoute>
+        } />
+        <Route path="/donor/scheduled" element={
+          <ProtectedRoute allowedRoles={['DONOR']}><ScheduledDonations /></ProtectedRoute>
+        } />
+        <Route path="/donor/donations/:id/qr" element={
+          <ProtectedRoute allowedRoles={['DONOR']}><DonorQR /></ProtectedRoute>
+        } />
+
         <Route path="/ngo" element={
           <ProtectedRoute allowedRoles={['NGO']}>
             <RecipientDashboard />
           </ProtectedRoute>
+        } />
+
+        {/* V2 NGO pages */}
+        <Route path="/ngo/scan" element={
+          <ProtectedRoute allowedRoles={['NGO']}><NgoScanner /></ProtectedRoute>
+        } />
+        <Route path="/ngo/scheduled" element={
+          <ProtectedRoute allowedRoles={['NGO']}><ScheduledDonations /></ProtectedRoute>
         } />
 
         {/* Backwards-compatible alias for the old /recipient route */}
@@ -62,6 +94,13 @@ export default function AppRouter() {
         <Route path="/analytics" element={
           <ProtectedRoute allowedRoles={['ADMIN']}>
             <AnalyticsPage />
+          </ProtectedRoute>
+        } />
+
+        {/* V2 admin analytics */}
+        <Route path="/admin/v2" element={
+          <ProtectedRoute allowedRoles={['ADMIN']}>
+            <V2AnalyticsPage />
           </ProtectedRoute>
         } />
 

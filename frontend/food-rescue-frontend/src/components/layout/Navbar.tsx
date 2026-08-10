@@ -1,19 +1,22 @@
 import { useState, useEffect } from 'react';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
+import { useTranslation } from 'react-i18next';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Menu, X, Leaf, Bell } from 'lucide-react';
 import { useAuth } from '../../context/AuthContext';
 import { dashboardFor } from '../../utils/roles';
 import { useNotifications } from '../../hooks/useNotifications';
 import Button from '../ui/Button';
+import LanguageSwitcher from './LanguageSwitcher';
 
 const NAV_LINKS = [
-  { label: 'Browse Food', to: '/browse' },
-  { label: 'Map', to: '/map' },
-  { label: 'About', to: '/about' },
+  { label: 'nav.browse', to: '/browse' },
+  { label: 'nav.map', to: '/map' },
+  { label: 'nav.about', to: '/about' },
 ];
 
 export default function Navbar() {
+  const { t } = useTranslation();
   const [open, setOpen] = useState(false);
   const [scrolled, setScrolled] = useState(false);
   const { user, logout } = useAuth();
@@ -41,9 +44,10 @@ export default function Navbar() {
 
         {/* Desktop */}
         <div className="hidden md:flex items-center gap-6">
+          <LanguageSwitcher />
           {NAV_LINKS.map(l => (
             <Link key={l.to} to={l.to} className={`text-sm font-medium transition-colors hover:text-[#2d6a4f] ${location.pathname === l.to ? 'text-[#2d6a4f]' : 'text-[#6b7280]'}`}>
-              {l.label}
+              {t(l.label)}
             </Link>
           ))}
           {user ? (
@@ -56,16 +60,16 @@ export default function Navbar() {
                   </span>
                 )}
               </Link>
-              <Link to={dashboardPath} className="text-sm font-medium text-[#6b7280] hover:text-[#2d6a4f] transition-colors">Dashboard</Link>
+              <Link to={dashboardPath} className="text-sm font-medium text-[#6b7280] hover:text-[#2d6a4f] transition-colors">{t('nav.dashboard')}</Link>
               <div className="w-8 h-8 rounded-full bg-[#d8f3dc] text-[#2d6a4f] text-xs font-bold flex items-center justify-center">
                 {(user.name || '?').charAt(0).toUpperCase()}
               </div>
-              <button onClick={() => logout().then(() => navigate('/'))} className="text-sm text-[#6b7280] hover:text-red-500 transition-colors">Sign out</button>
+              <button onClick={() => logout().then(() => navigate('/'))} className="text-sm text-[#6b7280] hover:text-red-500 transition-colors">{t('nav.signOut')}</button>
             </div>
           ) : (
             <div className="flex items-center gap-2">
-              <Button variant="ghost" size="sm" onClick={() => navigate('/auth')}>Sign in</Button>
-              <Button size="sm" onClick={() => navigate('/auth?mode=signup')}>Get started</Button>
+              <Button variant="ghost" size="sm" onClick={() => navigate('/auth')}>{t('nav.signIn')}</Button>
+              <Button size="sm" onClick={() => navigate('/auth?mode=signup')}>{t('nav.getStarted')}</Button>
             </div>
           )}
         </div>
@@ -86,18 +90,19 @@ export default function Navbar() {
             className="md:hidden bg-white border-t border-gray-100 overflow-hidden"
           >
             <div className="px-4 py-4 flex flex-col gap-4">
+              <LanguageSwitcher />
               {NAV_LINKS.map(l => (
-                <Link key={l.to} to={l.to} className="text-sm font-medium text-[#1c1c1e]">{l.label}</Link>
+                <Link key={l.to} to={l.to} className="text-sm font-medium text-[#1c1c1e]">{t(l.label)}</Link>
               ))}
               {user ? (
                 <>
-                  <Link to={dashboardPath} className="text-sm font-medium text-[#1c1c1e]">Dashboard</Link>
-                  <button onClick={() => logout().then(() => navigate('/'))} className="text-sm text-red-500 text-left">Sign out</button>
+                  <Link to={dashboardPath} className="text-sm font-medium text-[#1c1c1e]">{t('nav.dashboard')}</Link>
+                  <button onClick={() => logout().then(() => navigate('/'))} className="text-sm text-red-500 text-left">{t('nav.signOut')}</button>
                 </>
               ) : (
                 <div className="flex gap-2">
-                  <Button variant="ghost" size="sm" onClick={() => navigate('/auth')}>Sign in</Button>
-                  <Button size="sm" onClick={() => navigate('/auth?mode=signup')}>Get started</Button>
+                  <Button variant="ghost" size="sm" onClick={() => navigate('/auth')}>{t('nav.signIn')}</Button>
+                  <Button size="sm" onClick={() => navigate('/auth?mode=signup')}>{t('nav.getStarted')}</Button>
                 </div>
               )}
             </div>
