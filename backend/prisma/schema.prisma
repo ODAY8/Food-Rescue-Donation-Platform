@@ -1,0 +1,152 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+// ─── Enums ────────────────────────────────────────────────────────────────────
+
+enum Role {
+  DONOR
+  NGO
+  ADMIN
+}
+
+enum FoodStatus {
+  AVAILABLE
+  CLAIMED
+  EXPIRED
+}
+
+enum FoodCategory {
+  Produce
+  Dairy
+  Bakery
+  Meat
+  Prepared
+  Beverages
+  Pantry
+  Other
+}
+
+enum DonationStatus {
+  PENDING
+  APPROVED
+  REJECTED
+  PICKUP_SCHEDULED
+  COLLECTED
+  DELIVERED
+  COMPLETED
+  CANCELLED
+  EXPIRED
+}
+
+enum NotificationType {
+  INFO
+  SUCCESS
+  WARNING
+  ACTION
+}
+
+// ─── Models ───────────────────────────────────────────────────────────────────
+
+model User {
+  id           String   @id @default(uuid()) @db.Uuid
+  name         String   @db.VarChar(100)
+  email        String   @unique @db.VarChar(150)
+  password     String   @db.VarChar(255)
+  role         Role     @default(DONOR)
+  phone        String?  @db.VarChar(20)
+  address      String?  @db.VarChar(255)
+  organization String?  @db.VarChar(150)
+  createdAt    DateTime @default(now()) @map("created_at")
+  updatedAt    DateTime @updatedAt @map("updated_at")
+
+  // Relations
+  foods              Food[]         @relation("DonorFoods")
+  donationsDonated   Donation[]     @relation("DonorDonations")
+  donationsReceived  Donation[]     @relation("NgoDonations")
+  notifications      Notification[]
+
+  @@map("users")
+}
+
+model Food {
+  id             String       @id @default(uuid()) @db.Uuid
+  donorId        String       @map("donor_id") @db.Uuid
+  title          String       @db.VarChar(150)
+  description    String       @db.Text
+  category       FoodCategory @default(Other)
+  quantity       Int
+  unit           String       @default("kg") @db.VarChar(30)
+  servings       Int          @default(0)
+  expiryDate     DateTime     @map("expiry_date")
+  pickupLocation String       @default("") @map("pickup_address") @db.VarChar(255)
+  pickupWindow   String       @default("") @map("pickup_window") @db.VarChar(150)
+  city           String       @default("") @db.VarChar(100)
+  latitude       Float?
+  longitude      Float?
+  imageUrl       String       @default("") @map("image_url") @db.Text
+  status         FoodStatus   @default(AVAILABLE)
+  createdAt      DateTime     @default(now()) @map("created_at")
+  updatedAt      DateTime     @updatedAt @map("updated_at")
+
+  // Relations
+  donor     User       @relation("DonorFoods", fields: [donorId], references: [id], onDelete: Cascade)
+  donations Donation[]
+
+  @@index([donorId])
+  @@index([status])
+  @@index([expiryDate])
+  @@index([city])
+  @@map("foods")
+}
+
+model Donation {
+  id          String         @id @default(uuid()) @db.Uuid
+  foodId      String         @map("food_id") @db.Uuid
+  donorId     String         @map("donor_id") @db.Uuid
+  ngoId       String         @map("claimer_id") @db.Uuid
+  status      DonationStatus @default(PENDING)
+  requestedAt DateTime       @default(now()) @map("requested_at")
+  approvedAt  DateTime?      @map("approved_at")
+  rejectedAt  DateTime?      @map("rejected_at")
+  pickupScheduledAt DateTime? @map("pickup_scheduled_at")
+  collectedAt DateTime?      @map("collected_at")
+  deliveredAt DateTime?      @map("delivered_at")
+  completedAt DateTime?      @map("completed_at")
+  createdAt   DateTime       @default(now()) @map("created_at")
+  updatedAt   DateTime       @updatedAt @map("updated_at")
+
+  // Relations
+  food  Food @relation(fields: [foodId], references: [id], onDelete: Cascade)
+  donor User @relation("DonorDonations", fields: [donorId], references: [id], onDelete: Cascade)
+  ngo   User @relation("NgoDonations", fields: [ngoId], references: [id], onDelete: Cascade)
+
+  @@index([foodId, status])
+  @@index([foodId])
+  @@index([donorId])
+  @@index([ngoId])
+  @@index([status])
+  @@map("donations")
+}
+
+model Notification {
+  id        String           @id @default(uuid()) @db.Uuid
+  userId    String           @map("user_id") @db.Uuid
+  title     String           @db.VarChar(200)
+  message   String           @db.Text
+  type      NotificationType @default(INFO)
+  isRead    Boolean          @default(false) @map("read")
+  link      String?          @db.VarChar(255)
+  createdAt DateTime         @default(now()) @map("created_at")
+
+  // Relations
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+  @@index([userId, isRead])
+  @@map("notifications")
+}
