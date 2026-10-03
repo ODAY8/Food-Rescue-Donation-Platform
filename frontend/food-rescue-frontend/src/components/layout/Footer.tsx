@@ -18,6 +18,9 @@ export default function Footer() {
             <li><Link to="/browse" className="hover:text-white transition-colors">Browse Listings</Link></li>
             <li><Link to="/donor" className="hover:text-white transition-colors">Donor Dashboard</Link></li>
             <li><Link to="/recipient" className="hover:text-white transition-colors">NGO Dashboard</Link></li>
+            <li><Link to="/donor/inventory" className="hover:text-white transition-colors">Inventory</Link></li>
+            <li><Link to="/donor/scheduled" className="hover:text-white transition-colors">Scheduled Donations</Link></li>
+            <li><Link to="/donor/food/new" className="hover:text-white transition-colors">Post with Image Recognition</Link></li>
             <li><Link to="/about" className="hover:text-white transition-colors">Our Impact</Link></li>
           </ul>
         </div>

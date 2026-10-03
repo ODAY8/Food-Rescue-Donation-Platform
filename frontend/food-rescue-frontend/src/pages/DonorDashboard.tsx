@@ -1,16 +1,24 @@
 import { useState } from 'react';
 import { motion } from 'framer-motion';
-import { Plus, Package, Clock, Pencil, Trash2 } from 'lucide-react';
+import { Link, useNavigate } from 'react-router-dom';
+import { Plus, Package, Clock, Pencil, Trash2, Sparkles, Camera, QrCode, Boxes, CalendarClock } from 'lucide-react';
 import PageWrapper from '../components/layout/PageWrapper';
 import Button from '../components/ui/Button';
 import Badge from '../components/ui/Badge';
 import Modal from '../components/ui/Modal';
 import { useAuth } from '../context/AuthContext';
 import { useToast } from '../hooks/useToast';
-import { useNavigate } from 'react-router-dom';
 import { foodApi, type FoodItem, type CreateFoodBody } from '../services/foodApi';
 import { donationApi, type Donation } from '../services/donationApi';
 import { useApi } from '../hooks/useApi';
+
+const QUICK_ACTIONS = [
+  { label: 'AI Expiry Prediction', to: '/browse', icon: Sparkles, desc: 'See AI risk scores on every listing' },
+  { label: 'Food Image Recognition', to: '/donor/food/new', icon: Camera, desc: 'Upload a photo to auto-fill a listing' },
+  { label: 'Generate QR Code', to: '/donor/qr', icon: QrCode, desc: 'Create a pickup QR for a donation' },
+  { label: 'Inventory', to: '/donor/inventory', icon: Boxes, desc: 'Track stock and donate from inventory' },
+  { label: 'Scheduled Donations', to: '/donor/scheduled', icon: CalendarClock, desc: 'Plan future donation pickups' },
+];
 
 const CATEGORIES = ['Produce', 'Bakery', 'Dairy', 'Meat', 'Prepared', 'Beverages', 'Pantry', 'Other'];
 
@@ -169,6 +177,26 @@ export default function DonorDashboard() {
           ))}
         </div>
 
+        {/* V2 quick actions */}
+        <div className="mb-10">
+          <h2 className="text-lg font-semibold text-[#1c1c1e] mb-4 flex items-center gap-2">
+            <Sparkles size={18} className="text-[#f4845f]" /> Smart Donor Tools
+          </h2>
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+            {QUICK_ACTIONS.map(a => (
+              <Link key={a.to} to={a.to} className="bg-white rounded-2xl border border-gray-100 shadow-sm p-4 hover:shadow-md hover:border-[#2d6a4f]/30 transition-all flex items-start gap-3">
+                <div className="w-10 h-10 rounded-xl bg-[#d8f3dc] text-[#2d6a4f] flex items-center justify-center flex-shrink-0">
+                  <a.icon size={18} />
+                </div>
+                <div className="min-w-0">
+                  <div className="font-semibold text-sm text-[#1c1c1e]">{a.label}</div>
+                  <div className="text-xs text-[#6b7280] mt-0.5">{a.desc}</div>
+                </div>
+              </Link>
+            ))}
+          </div>
+        </div>
+
         {/* Pending approvals */}
         {pendingDonations.length > 0 && (
           <>
@@ -243,6 +271,9 @@ export default function DonorDashboard() {
                     <div className="text-xs text-[#6b7280]">{d.food.servings} servings · {new Date(d.createdAt).toLocaleDateString()}</div>
                   </div>
                   <Badge label={cfg.label} color={cfg.color} />
+                  <Link to="/donor/qr" aria-label={`Generate QR for ${d.food.title}`} className="p-1.5 rounded-lg hover:bg-gray-100 text-[#6b7280]">
+                    <QrCode size={14} />
+                  </Link>
                   {d.status === 'APPROVED' && (
                     <Button size="sm" onClick={() => handleSchedulePickup(d)}>Schedule Pickup</Button>
                   )}

@@ -1,6 +1,6 @@
 import { motion } from 'framer-motion';
-import { Heart, Clock, CheckCircle, MapPin } from 'lucide-react';
-import { useNavigate } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
+import { Heart, Clock, CheckCircle, MapPin, ScanLine, CalendarClock, Sparkles } from 'lucide-react';
 import PageWrapper from '../components/layout/PageWrapper';
 import Button from '../components/ui/Button';
 import Badge from '../components/ui/Badge';
@@ -10,6 +10,11 @@ import { foodApi } from '../services/foodApi';
 import { donationApi, type Donation, type DonationStatus } from '../services/donationApi';
 import { useApi } from '../hooks/useApi';
 import { useState } from 'react';
+
+const NGO_ACTIONS = [
+  { label: 'Scan QR', to: '/ngo/scan', icon: ScanLine, desc: 'Verify a pickup and confirm collection' },
+  { label: 'Scheduled Donations', to: '/ngo/scheduled', icon: CalendarClock, desc: 'Accept upcoming scheduled donations' },
+];
 
 const claimStatusConfig: Record<string, { label: string; color: 'green' | 'orange' | 'blue' | 'red' | 'gray' }> = {
   PENDING:          { label: 'Pending Approval', color: 'orange' },
@@ -92,6 +97,26 @@ export default function RecipientDashboard() {
               <div className="text-xs text-[#6b7280] mt-1">{s.label}</div>
             </div>
           ))}
+        </div>
+
+        {/* V2 quick actions */}
+        <div className="mb-8">
+          <h2 className="text-lg font-semibold text-[#1c1c1e] mb-4 flex items-center gap-2">
+            <Sparkles size={18} className="text-[#f4845f]" /> Smart Tools
+          </h2>
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 max-w-xl">
+            {NGO_ACTIONS.map(a => (
+              <Link key={a.to} to={a.to} className="bg-white rounded-2xl border border-gray-100 shadow-sm p-4 hover:shadow-md hover:border-[#2d6a4f]/30 transition-all flex items-start gap-3">
+                <div className="w-10 h-10 rounded-xl bg-[#d8f3dc] text-[#2d6a4f] flex items-center justify-center flex-shrink-0">
+                  <a.icon size={18} />
+                </div>
+                <div className="min-w-0">
+                  <div className="font-semibold text-sm text-[#1c1c1e]">{a.label}</div>
+                  <div className="text-xs text-[#6b7280] mt-0.5">{a.desc}</div>
+                </div>
+              </Link>
+            ))}
+          </div>
         </div>
 
         <div className="flex bg-gray-100 rounded-xl p-1 mb-6 w-fit">

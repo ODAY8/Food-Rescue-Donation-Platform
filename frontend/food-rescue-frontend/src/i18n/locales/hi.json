@@ -216,7 +216,11 @@
     "notFound": "अमान्य या समाप्त QR कोड",
     "collect": "संग्रह की पुष्टि करें",
     "deliver": "वितरण की पुष्टि करें",
-    "scanCount": "{{count}} बार स्कैन किया गया"
+    "scanCount": "{{count}} बार स्कैन किया गया",
+    "generateForDonation": "पिकअप QR कोड बनाने के लिए अपने किसी दान का चयन करें।",
+    "selectDonation": "दान चुनें",
+    "selectDonationPlaceholder": "एक दान चुनें...",
+    "noDonations": "अभी कोई दान नहीं। जब कोई एनजीओ आपका भोजन क्लेम करे, तो यहाँ से पिकअप QR कोड बनाएँ।"
   },
   "admin": {
     "v2Analytics": "V2 विश्लेषण",

@@ -6,6 +6,7 @@ import FoodCard from '../components/shared/FoodCard';
 import FilterBar, { type Filters } from '../components/shared/FilterBar';
 import { CardSkeleton } from '../components/ui/Skeleton';
 import { foodApi, type FoodItem } from '../services/foodApi';
+import { searchApi } from '../services/searchApi';
 
 export default function Browse() {
   const [filters, setFilters] = useState<Filters>({ search: '', category: '', expiry: '', city: '' });
@@ -16,13 +17,24 @@ export default function Browse() {
   const fetchFoods = useCallback(async () => {
     setLoading(true);
     try {
-      const res = await foodApi.getAll({
-        search: filters.search || undefined,
+      const hasQuery = filters.search.trim().length > 0;
+      const base: { category?: string; city?: string } = {
         category: filters.category || undefined,
         city: filters.city || undefined,
-        status: 'AVAILABLE',
-      });
-      let items = res.data.data;
+      };
+      let items: FoodItem[];
+      let serverTotal: number;
+      if (hasQuery) {
+        // V2 smart search
+        const res = await searchApi.search({ q: filters.search.trim(), ...base, availability: 'true' });
+        items = res.data;
+        serverTotal = res.pagination.total;
+      } else {
+        // Normal browsing
+        const res = await foodApi.getAll({ ...base, status: 'AVAILABLE' });
+        items = res.data.data;
+        serverTotal = res.data.pagination.total;
+      }
       // Client-side expiry window filter (server doesn't support it yet)
       if (filters.expiry) {
         const maxHours = Number(filters.expiry);
@@ -32,7 +44,7 @@ export default function Browse() {
         });
       }
       setFoods(items);
-      setTotal(filters.expiry ? items.length : res.data.pagination.total);
+      setTotal(filters.expiry ? items.length : serverTotal);
     } catch {
       setFoods([]);
     } finally {

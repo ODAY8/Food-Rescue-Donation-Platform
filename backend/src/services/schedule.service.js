@@ -190,8 +190,9 @@ const sendReminders = async () => {
 let reminderJobTimer = null;
 const startReminderJob = () => {
     if (reminderJobTimer) return;
-    sendReminders(); // run once at boot
-    reminderJobTimer = setInterval(sendReminders, REMINDER_INTERVAL_MS);
+    const run = () => sendReminders().catch((err) => console.error("Reminder job error:", err?.message || err));
+    run(); // run once at boot
+    reminderJobTimer = setInterval(run, REMINDER_INTERVAL_MS);
     reminderJobTimer.unref?.(); // don't hold the process open
 };
 

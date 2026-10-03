@@ -216,7 +216,11 @@
     "notFound": "Invalid or expired QR code",
     "collect": "Confirm Collection",
     "deliver": "Confirm Delivery",
-    "scanCount": "Scanned {{count}} times"
+    "scanCount": "Scanned {{count}} times",
+    "generateForDonation": "Pick one of your donations to generate a pickup QR code.",
+    "selectDonation": "Select a donation",
+    "selectDonationPlaceholder": "Choose a donation...",
+    "noDonations": "No donations yet. Once an NGO claims your food, generate a QR code here for pickup."
   },
   "admin": {
     "v2Analytics": "V2 Analytics",

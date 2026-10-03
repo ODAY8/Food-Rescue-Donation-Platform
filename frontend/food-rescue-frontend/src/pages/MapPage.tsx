@@ -1,37 +1,51 @@
 import { MapPin } from 'lucide-react';
 import PageWrapper from '../components/layout/PageWrapper';
+import GoogleMap from '../components/GoogleMap';
+import ErrorBoundary from '../components/ErrorBoundary';
 import { foodApi, type FoodItem } from '../services/foodApi';
 import { useApi } from '../hooks/useApi';
 
-// Live Map foundation (Version 1.0):
-// Renders real pickup locations from the API. Full interactive mapping,
-// driver tracking, and route optimization are planned for Version 3.0.
+// Live Map (Version 2.0):
+// Renders a real Google Map with donation markers from the API, plus the
+// existing pickup-location list below. Driver tracking and route
+// optimization remain planned for a future version.
 export default function MapPage() {
   const { data, loading } = useApi(() => foodApi.getAll({ status: 'AVAILABLE', limit: 100 }), []);
   const foods: FoodItem[] = data?.data?.data ?? [];
-  const geolocated = foods.filter(f => f.latitude && f.longitude);
+  const geolocated = foods.filter((f): f is FoodItem & { latitude: number; longitude: number } =>
+    typeof f.latitude === 'number' && typeof f.longitude === 'number'
+  );
+
+  // Map-ready donation markers (clean structure; can later come from any backend source)
+  const markers = geolocated.map(f => ({
+    id: f.id,
+    title: f.pickupLocation,
+    latitude: f.latitude,
+    longitude: f.longitude,
+    foodName: f.title,
+    quantity: `${f.quantity} ${f.unit}`,
+    expiryDate: f.expiryDate,
+    donorName: f.donor?.organization || f.donor?.name,
+    status: f.status,
+  }));
 
   return (
     <PageWrapper>
       <div className="max-w-6xl mx-auto px-4 py-10">
         <div className="mb-8">
           <h1 className="text-2xl font-bold text-[#1c1c1e] flex items-center gap-2">
-            <MapPin size={22} className="text-[#2d6a4f]" /> Pickup Locations
+            <MapPin size={22} className="text-[#2d6a4f]" /> Live Map
           </h1>
           <p className="text-[#6b7280] text-sm mt-1">
-            Live pickup points from real listings. Interactive maps arrive in Version 3.0.
+            Real pickup points from live listings. Click a marker for donation details.
           </p>
         </div>
 
-        {/* Map foundation — static grid placeholder; no private info exposed */}
-        <div className="bg-white rounded-2xl border border-gray-100 shadow-sm overflow-hidden mb-8">
-          <div className="relative h-64 bg-[#d8f3dc]/40 grid place-items-center">
-            <div className="text-center">
-              <MapPin size={40} className="text-[#2d6a4f] mx-auto mb-2" />
-              <p className="text-sm text-[#6b7280]">Interactive map coming in Version 3.0</p>
-              <p className="text-xs text-[#6b7280] mt-1">{geolocated.length} geolocated pickup points loaded</p>
-            </div>
-          </div>
+        {/* Live Google Map */}
+        <div className="mb-8">
+          <ErrorBoundary>
+            <GoogleMap markers={markers} height="480px" />
+          </ErrorBoundary>
         </div>
 
         {loading ? (

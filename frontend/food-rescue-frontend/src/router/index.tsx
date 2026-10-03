@@ -17,6 +17,7 @@ import InventoryPage from '../pages/InventoryPage';
 import InventoryHistoryPage from '../pages/InventoryHistoryPage';
 import ScheduledDonations from '../pages/ScheduledDonations';
 import DonorQR from '../pages/DonorQR';
+import DonorQRPage from '../pages/DonorQRPage';
 import NgoScanner from '../pages/NgoScanner';
 import V2AnalyticsPage from '../pages/V2AnalyticsPage';
 import ProtectedRoute from '../components/shared/ProtectedRoute';
@@ -54,6 +55,9 @@ export default function AppRouter() {
         } />
         <Route path="/donor/donations/:id/qr" element={
           <ProtectedRoute allowedRoles={['DONOR']}><DonorQR /></ProtectedRoute>
+        } />
+        <Route path="/donor/qr" element={
+          <ProtectedRoute allowedRoles={['DONOR']}><DonorQRPage /></ProtectedRoute>
         } />
 
         <Route path="/ngo" element={
