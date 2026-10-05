@@ -1,8 +1,9 @@
 import { useState, useEffect } from 'react';
 import { useNavigate, useSearchParams, useLocation } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Leaf, Store, Heart } from 'lucide-react';
+import { Store, Heart } from 'lucide-react';
 import Button from '../components/ui/Button';
+import BrandLogo from '../components/brand/BrandLogo';
 import { useAuth } from '../context/AuthContext';
 import { useToast } from '../hooks/useToast';
 import { dashboardFor } from '../utils/roles';
@@ -70,9 +71,8 @@ export default function Auth() {
         animate={{ opacity: 1, y: 0 }}
         className="bg-white rounded-3xl shadow-xl w-full max-w-md p-8"
       >
-        <div className="flex items-center gap-2 font-bold text-[#2d6a4f] text-lg mb-8">
-          <Leaf size={22} className="text-[#40916c]" />
-          FoodRescue
+        <div className="mb-8 flex items-center justify-between">
+          <BrandLogo size="lg" />
         </div>
 
         <div className="flex bg-gray-100 rounded-xl p-1 mb-6">

@@ -2,12 +2,13 @@ import { useState, useEffect } from 'react';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Menu, X, Leaf, Bell } from 'lucide-react';
+import { Menu, X, Bell } from 'lucide-react';
 import { useAuth } from '../../context/AuthContext';
 import { dashboardFor } from '../../utils/roles';
 import { useNotifications } from '../../hooks/useNotifications';
 import Button from '../ui/Button';
 import LanguageSwitcher from './LanguageSwitcher';
+import BrandLogo from '../brand/BrandLogo';
 
 const NAV_LINKS = [
   { label: 'nav.browse', to: '/browse' },
@@ -37,10 +38,7 @@ export default function Navbar() {
   return (
     <header className={`fixed top-0 inset-x-0 z-40 transition-all duration-300 ${scrolled ? 'bg-white/90 backdrop-blur-md shadow-sm' : 'bg-transparent'}`}>
       <nav className="max-w-6xl mx-auto px-4 h-16 flex items-center justify-between" aria-label="Main navigation">
-        <Link to="/" className="flex items-center gap-2 font-bold text-[#2d6a4f] text-lg">
-          <Leaf size={22} className="text-[#40916c]" />
-          FoodRescue
-        </Link>
+        <BrandLogo size="md" />
 
         {/* Desktop */}
         <div className="hidden md:flex items-center gap-6">

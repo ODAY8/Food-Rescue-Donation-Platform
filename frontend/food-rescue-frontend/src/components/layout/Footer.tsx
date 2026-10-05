@@ -1,14 +1,14 @@
 import { Link } from 'react-router-dom';
-import { Leaf, Heart } from 'lucide-react';
+import { Heart } from 'lucide-react';
+import BrandLogo from '../brand/BrandLogo';
 
 export default function Footer() {
   return (
     <footer className="bg-[#1b4332] text-white mt-24">
       <div className="max-w-6xl mx-auto px-4 py-12 grid grid-cols-1 md:grid-cols-3 gap-8">
         <div>
-          <div className="flex items-center gap-2 font-bold text-lg mb-3">
-            <Leaf size={20} className="text-[#52b788]" />
-            FoodRescue
+          <div className="mb-3">
+            <BrandLogo size="md" variant="light" />
           </div>
           <p className="text-sm text-[#52b788] leading-relaxed">Connecting surplus food with people who need it most. Zero waste, maximum impact.</p>
         </div>

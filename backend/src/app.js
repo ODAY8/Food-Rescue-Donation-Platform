@@ -15,9 +15,25 @@ const app = express();
 // Security headers — allow cross-origin resource policy for uploaded images
 app.use(helmet({ crossOriginResourcePolicy: { policy: "cross-origin" } }));
 
-// CORS — only allow the configured frontend origin
+// CORS — support configured CLIENT_URL, Vercel deployments, and localhost
+const rawOrigins = (process.env.CLIENT_URL || "http://localhost:5173")
+    .split(",")
+    .map(o => o.trim())
+    .filter(Boolean);
+
 app.use(cors({
-    origin: process.env.CLIENT_URL || "http://localhost:5173",
+    origin: (origin, callback) => {
+        if (!origin) return callback(null, true);
+        if (
+            rawOrigins.includes(origin) ||
+            rawOrigins.includes("*") ||
+            origin.endsWith(".vercel.app") ||
+            origin.startsWith("http://localhost:")
+        ) {
+            return callback(null, true);
+        }
+        return callback(new Error(`CORS policy blocked request from ${origin}`));
+    },
     credentials: true,
 }));
 

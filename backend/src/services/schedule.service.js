@@ -1,6 +1,7 @@
 const prisma = require("../config/prisma");
 const donationService = require("./donation.service");
 const notifService = require("./notification.service");
+const emailService = require("./email.service");
 const FoodModel = require("../models/food.model");
 
 const REMINDER_INTERVAL_MS = parseInt(process.env.SCHEDULE_REMINDER_INTERVAL_MS, 10) || 15 * 60 * 1000; // 15 min default
@@ -159,7 +160,11 @@ const sendReminders = async () => {
             scheduledFor: { gte: windowStart, lte: windowEnd },
             reminderSentAt: null,
         },
-        include: { food: { select: { title: true } }, donor: { select: { id: true } }, ngo: { select: { id: true } } },
+        include: {
+            food: { select: { title: true, quantity: true, unit: true, pickupLocation: true, pickupWindow: true } },
+            donor: { select: { id: true, name: true, email: true } },
+            ngo: { select: { id: true, name: true, email: true } },
+        },
     });
 
     for (const s of due) {
@@ -170,6 +175,22 @@ const sendReminders = async () => {
             "info",
             "/donor/scheduled"
         );
+
+        if (s.donor?.email) {
+            emailService.sendPickupReminder({
+                to: s.donor.email,
+                name: s.donor.name,
+                role: "DONOR",
+                foodTitle: s.food?.title,
+                quantity: s.food?.quantity,
+                unit: s.food?.unit,
+                pickupLocation: s.food?.pickupLocation,
+                pickupWindow: s.food?.pickupWindow,
+                scheduledFor: s.scheduledFor,
+                hoursLeft: REMINDER_HOURS,
+            }).catch((err) => console.error("Failed to send donor reminder email:", err.message));
+        }
+
         if (s.ngo) {
             notifService.push(
                 s.ngo.id,
@@ -178,6 +199,21 @@ const sendReminders = async () => {
                 "info",
                 "/ngo/scheduled"
             );
+
+            if (s.ngo.email) {
+                emailService.sendPickupReminder({
+                    to: s.ngo.email,
+                    name: s.ngo.name,
+                    role: "NGO",
+                    foodTitle: s.food?.title,
+                    quantity: s.food?.quantity,
+                    unit: s.food?.unit,
+                    pickupLocation: s.food?.pickupLocation,
+                    pickupWindow: s.food?.pickupWindow,
+                    scheduledFor: s.scheduledFor,
+                    hoursLeft: REMINDER_HOURS,
+                }).catch((err) => console.error("Failed to send NGO reminder email:", err.message));
+            }
         }
         await prisma.scheduledDonation.update({
             where: { id: s.id },

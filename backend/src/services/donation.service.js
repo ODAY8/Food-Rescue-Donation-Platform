@@ -1,6 +1,7 @@
 const DonationModel = require("../models/donation.model");
 const FoodModel     = require("../models/food.model");
 const notifService  = require("./notification.service");
+const emailService  = require("./email.service");
 const prisma        = require("../config/prisma");
 
 // Allowed transitions: { currentStatus: { newStatus: allowedRole } }
@@ -43,6 +44,8 @@ const claimFood = async (foodId, userId) => {
             data: { foodId, ngoId: userId, donorId: food.donorId },
             include: {
                 food: { select: { id: true, title: true, pickupLocation: true, pickupWindow: true } },
+                donor: { select: { id: true, name: true, email: true, organization: true } },
+                ngo: { select: { id: true, name: true, organization: true } },
             },
         }),
         prisma.food.update({ where: { id: foodId }, data: { status: "CLAIMED" } }),
@@ -55,6 +58,15 @@ const claimFood = async (foodId, userId) => {
         "success",
         `/listing/${foodId}`
     );
+
+    if (donation.donor?.email) {
+        emailService.sendClaimNotification({
+            donorEmail: donation.donor.email,
+            donorName: donation.donor.name,
+            foodTitle: food.title,
+            ngoName: donation.ngo?.organization || donation.ngo?.name,
+        }).catch((err) => console.error("Failed to send claim email:", err.message));
+    }
 
     return { success: true, data: donation };
 };
@@ -117,7 +129,11 @@ const updateDonationStatus = async (id, newStatus, userId) => {
         prisma.donation.update({
             where: { id },
             data: { status: newStatus, ...timestamps },
-            include: { food: { select: { id: true, title: true } }, ngo: { select: { id: true, name: true } } },
+            include: {
+                food: { select: { id: true, title: true, pickupLocation: true, pickupWindow: true } },
+                ngo: { select: { id: true, name: true, email: true } },
+                donor: { select: { id: true, name: true, organization: true } },
+            },
         }),
         ...extraOps,
     ]);
@@ -125,6 +141,17 @@ const updateDonationStatus = async (id, newStatus, userId) => {
     const notifs = NOTIFICATIONS[newStatus];
     if (notifs?.ngo) notifService.push(donation.ngoId, notifs.ngo.title, notifs.ngo.msg, notifs.ngo.type);
     if (notifs?.donor) notifService.push(donation.donorId, notifs.donor.title, notifs.donor.msg, notifs.donor.type);
+
+    if (newStatus === "APPROVED" && updated.ngo?.email) {
+        emailService.sendApprovalNotification({
+            ngoEmail: updated.ngo.email,
+            ngoName: updated.ngo.name,
+            foodTitle: updated.food?.title,
+            donorName: updated.donor?.organization || updated.donor?.name,
+            pickupLocation: updated.food?.pickupLocation,
+            pickupWindow: updated.food?.pickupWindow,
+        }).catch((err) => console.error("Failed to send approval email:", err.message));
+    }
 
     return { success: true, data: updated };
 };
