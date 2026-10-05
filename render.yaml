@@ -1,0 +1,31 @@
+services:
+  - type: web
+    name: food-rescue-api
+    runtime: node
+    rootDir: backend
+    buildCommand: npm install && npx prisma generate
+    startCommand: npm start
+    plan: free
+    envVars:
+      - key: NODE_ENV
+        value: production
+      - key: PORT
+        value: 5000
+      - key: DATABASE_URL
+        sync: false
+      - key: JWT_SECRET
+        sync: false
+      - key: RESEND_API_KEY
+        sync: false
+      - key: EMAIL_FROM
+        value: '"Food Rescue" <onboarding@resend.dev>'
+      - key: GROQ_API_KEY
+        sync: false
+      - key: AI_BASE_URL
+        value: https://api.groq.com/openai/v1
+      - key: AI_VISION_MODEL
+        value: qwen/qwen3.8-27b
+      - key: AI_CLASSIFICATION_MODEL
+        value: qwen/qwen3.8-27b
+      - key: CLIENT_URL
+        value: "*"
