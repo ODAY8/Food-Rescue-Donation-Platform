@@ -68,8 +68,16 @@ export default function GoogleMap({
   const [loadError, setLoadError] = useState(null);
   const [geoState, setGeoState] = useState('idle'); // idle | locating | located | error
   const [geoMessage, setGeoMessage] = useState('');
+  const [activeMarker, setActiveMarker] = useState(markers[0] || null);
 
-  const apiKey = import.meta.env.VITE_GOOGLE_MAPS_API_KEY;
+  const apiKey = import.meta.env.VITE_GOOGLE_MAPS_API_KEY || 'AIzaSyD03UiVnx4ab7Z5OA4rsg12deAbqkdgp9Y';
+
+  // Keep active marker in sync if markers change
+  useEffect(() => {
+    if (markers.length > 0 && !activeMarker) {
+      setActiveMarker(markers[0]);
+    }
+  }, [markers, activeMarker]);
 
   // ---------- Map initialization (once) ----------
   useEffect(() => {
@@ -77,9 +85,7 @@ export default function GoogleMap({
 
     if (!apiKey) {
       setLoadState('error');
-      setLoadError(
-        'Google Maps is not configured. Add VITE_GOOGLE_MAPS_API_KEY to the frontend .env file and restart the dev server.'
-      );
+      setLoadError('Google Maps API key not found. Using OpenStreetMap fallback.');
       return undefined;
     }
 
@@ -281,13 +287,45 @@ export default function GoogleMap({
         </div>
       )}
 
-      {/* Configuration / load error */}
+      {/* Configuration / load error - OpenStreetMap Fallback */}
       {loadState === 'error' && (
-        <div className="absolute inset-0 z-10 grid place-items-center bg-[#fde8df]/60 p-6">
-          <div className="text-center max-w-md">
-            <AlertTriangle size={32} className="text-[#c0522a] mx-auto mb-2" />
-            <p className="text-sm font-medium text-[#1c1c1e] mb-1">Map unavailable</p>
-            <p className="text-xs text-[#6b7280]">{loadError}</p>
+        <div className="absolute inset-0 z-10 flex flex-col bg-white">
+          <div className="bg-emerald-50 border-b border-emerald-200/60 px-4 py-2 flex items-center justify-between text-xs text-[#2d6a4f]">
+            <span className="flex items-center gap-1.5 font-semibold">
+              <MapPin size={14} className="text-[#2d6a4f]" /> Community Map View (OpenStreetMap)
+            </span>
+            <span className="text-[11px] text-gray-500 hidden sm:inline">
+              Click any donation pin below to inspect
+            </span>
+          </div>
+          <div className="relative flex-1 bg-gray-50">
+            <iframe
+              title="OpenStreetMap"
+              className="w-full h-full border-0"
+              src={`https://www.openstreetmap.org/export/embed.html?bbox=${(activeMarker?.longitude || center?.lng || DEFAULT_CENTER.lng) - 0.04}%2C${(activeMarker?.latitude || center?.lat || DEFAULT_CENTER.lat) - 0.04}%2C${(activeMarker?.longitude || center?.lng || DEFAULT_CENTER.lng) + 0.04}%2C${(activeMarker?.latitude || center?.lat || DEFAULT_CENTER.lat) + 0.04}&layer=mapnik&marker=${activeMarker?.latitude || center?.lat || DEFAULT_CENTER.lat}%2C${activeMarker?.longitude || center?.lng || DEFAULT_CENTER.lng}`}
+            />
+            {/* Quick marker selector pills at bottom */}
+            {markers.length > 0 && (
+              <div className="absolute bottom-3 inset-x-3 z-10 flex gap-2 overflow-x-auto pb-1 scrollbar-none">
+                {markers.map((m) => {
+                  const isSelected = (activeMarker?.id || markers[0]?.id) === m.id;
+                  return (
+                    <button
+                      key={m.id}
+                      type="button"
+                      onClick={() => setActiveMarker(m)}
+                      className={`shrink-0 px-3 py-1.5 rounded-full text-xs font-medium shadow-sm transition-all border cursor-pointer ${
+                        isSelected
+                          ? 'bg-[#2d6a4f] text-white border-[#2d6a4f] scale-105'
+                          : 'bg-white/95 text-[#1c1c1e] border-gray-200 hover:bg-gray-50'
+                      }`}
+                    >
+                      📍 {m.foodName || m.title || 'Donation'} ({m.quantity || 'Available'})
+                    </button>
+                  );
+                })}
+              </div>
+            )}
           </div>
         </div>
       )}
