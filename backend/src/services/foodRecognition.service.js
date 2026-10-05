@@ -1,6 +1,7 @@
 const { callJsonCompletion } = require("./ai/ai.client");
 const { buildRecognitionSystemPrompt, buildRecognitionUserPrompt } = require("./ai/foodPrompts");
 const { FOOD_CATEGORIES } = require("../validations/food.validation");
+const aiConfig = require("../config/ai");
 
 const MIN_CONFIDENCE = 50;
 const MAX_IMAGE_BYTES = 5 * 1024 * 1024; // 5MB
@@ -59,7 +60,7 @@ const recognizeImage = async (buffer) => {
 
     try {
         const raw = await callJsonCompletion({
-            model: require("../../config/ai").visionModel,
+            model: aiConfig.visionModel,
             messages: [buildRecognitionSystemPrompt(), buildRecognitionUserPrompt()],
             images: [{ mime, base64 }],
         });

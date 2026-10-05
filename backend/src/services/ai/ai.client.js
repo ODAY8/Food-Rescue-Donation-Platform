@@ -21,7 +21,7 @@ const AI_ERRORS = {
  * @param {Array}  [opts.images]         [{ mime, base64 }] for vision models
  * @returns {Promise<string>} message content
  */
-async function callChatCompletion({ model, messages, jsonMode = false, images = [] }) {
+async function callChatCompletion({ model, messages, jsonMode = false, images = [], maxTokens = 250 }) {
     if (!aiConfig.isAiEnabled()) {
         const err = new Error("AI provider is not configured");
         err.code = AI_ERRORS.NO_KEY;
@@ -30,6 +30,7 @@ async function callChatCompletion({ model, messages, jsonMode = false, images = 
 
     const body = { model, messages };
     if (jsonMode) body.response_format = { type: "json_object" };
+    if (maxTokens) body.max_tokens = maxTokens;
     if (images.length > 0) {
         const last = messages[messages.length - 1];
         last.content = [
