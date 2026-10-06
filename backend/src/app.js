@@ -12,6 +12,10 @@ const { errorHandler } = require("./middleware/error.middleware");
 
 const app = express();
 
+// Trust reverse proxy headers (Render load balancer / Cloudflare / Vercel)
+app.set("trust proxy", 1);
+
+
 // Security headers — allow cross-origin resource policy for uploaded images
 app.use(helmet({ crossOriginResourcePolicy: { policy: "cross-origin" } }));
 
