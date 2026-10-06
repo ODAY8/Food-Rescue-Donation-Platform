@@ -54,9 +54,21 @@ router.get("/:id",    getFoodById);
 router.get("/:id/prediction",     getPrediction);
 router.post("/:id/expiry-prediction", protect, predictionLimiter, refreshPrediction);
 
+// Helper to ensure description is never missing or under 10 chars
+const ensureDescription = (req, res, next) => {
+    if (!req.body.description || req.body.description.trim().length < 10) {
+        const title = req.body.title || "surplus food";
+        req.body.description = req.body.description && req.body.description.trim().length > 0
+            ? `${req.body.description.trim()} - surplus food available for donation.`
+            : `Fresh surplus ${title} available for donation and immediate pickup.`;
+    }
+    next();
+};
+
 // Donor only
-router.post("/",      protect, restrictTo("DONOR"), validate(createFoodSchema), createFood);
+router.post("/",      protect, restrictTo("DONOR"), ensureDescription, validate(createFoodSchema), createFood);
 router.put("/:id",    protect, restrictTo("DONOR"), validate(updateFoodSchema), updateFood);
 router.delete("/:id", protect, restrictTo("DONOR"), deleteFood);
+
 
 module.exports = router;

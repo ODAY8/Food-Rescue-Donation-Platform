@@ -53,7 +53,18 @@ export default function DonorFoodCreate() {
     setImageUrl(url);
     if (sug) {
       setSuggestion(sug);
-      setForm((f) => ({ ...f, title: sug.foodName, category: sug.category, imageUrl: url }));
+      const generatedDesc =
+        sug.description && sug.description.trim().length >= 10
+          ? sug.description.trim()
+          : `Fresh surplus ${sug.foodName} available for immediate donation and pickup.`;
+
+      setForm((f) => ({
+        ...f,
+        title: sug.foodName,
+        category: sug.category,
+        description: f.description && f.description.trim().length >= 10 ? f.description : generatedDesc,
+        imageUrl: url,
+      }));
       setShowPrediction(true);
     } else {
       setSuggestion(null);
@@ -65,9 +76,14 @@ export default function DonorFoodCreate() {
     e.preventDefault();
     setSubmitting(true);
     try {
+      let desc = form.description?.trim() || '';
+      if (desc.length < 10) {
+        desc = `Fresh surplus ${form.title || 'food item'} available for donation and pickup.`;
+      }
+
       const body: CreateFoodBody = {
         title: form.title,
-        description: form.description,
+        description: desc,
         category: form.category,
         quantity: Number(form.quantity),
         unit: form.unit,
@@ -92,6 +108,7 @@ export default function DonorFoodCreate() {
       setSubmitting(false);
     }
   };
+
 
   return (
     <PageWrapper>
@@ -143,7 +160,25 @@ export default function DonorFoodCreate() {
                 ))}
               </select>
             </label>
+            <label className="block md:col-span-2">
+              <span className="text-sm font-medium text-[#1c1c1e]">{t('inventory.description') || 'Description'} *</span>
+              <textarea
+                required
+                minLength={10}
+                rows={3}
+                value={form.description}
+                onChange={(e) => set('description', e.target.value)}
+                placeholder="Brief description of the food item (e.g. freshly prepared, ingredients, condition — minimum 10 characters)"
+                className="mt-1 w-full rounded-xl border border-gray-200 px-3 py-2 text-sm focus:ring-2 focus:ring-[#2d6a4f]/30 focus:border-[#2d6a4f]"
+              />
+              <span className="text-xs text-[#9ca3af] mt-1 block">
+                {form.description.length < 10
+                  ? `${10 - form.description.length} more characters required`
+                  : `${form.description.length} characters`}
+              </span>
+            </label>
             <label className="block">
+
               <span className="text-sm font-medium text-[#1c1c1e]">{t('inventory.quantity')} *</span>
               <input
                 required
