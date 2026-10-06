@@ -8,8 +8,10 @@ import { useAuth } from '../context/AuthContext';
 import { useToast } from '../hooks/useToast';
 import { foodApi } from '../services/foodApi';
 import { donationApi, type Donation, type DonationStatus } from '../services/donationApi';
+import { resolveAssetUrl } from '../services/apiClient';
 import { useApi } from '../hooks/useApi';
 import { useState } from 'react';
+
 
 const NGO_ACTIONS = [
   { label: 'Scan QR', to: '/ngo/scan', icon: ScanLine, desc: 'Verify a pickup and confirm collection' },
@@ -138,7 +140,14 @@ export default function RecipientDashboard() {
                 <motion.div key={food.id} whileHover={{ y: -4 }} transition={{ type: 'spring', stiffness: 300, damping: 20 }}
                   className="bg-white rounded-2xl overflow-hidden border border-gray-100 shadow-sm cursor-pointer"
                   onClick={() => navigate(`/listing/${food.id}`)}>
-                  {food.imageUrl && <img src={food.imageUrl} alt={food.title} className="w-full h-40 object-cover" />}
+                  {food.imageUrl && (
+                    <img
+                      src={resolveAssetUrl(food.imageUrl)}
+                      alt={food.title}
+                      onError={(e) => { (e.currentTarget as HTMLElement).style.display = 'none'; }}
+                      className="w-full h-40 object-cover"
+                    />
+                  )}
                   <div className="p-4">
                     <div className="font-semibold text-[#1c1c1e] text-sm mb-1">{food.title}</div>
                     <div className="text-xs text-[#6b7280] line-clamp-2 mb-2">{food.description}</div>
@@ -168,8 +177,14 @@ export default function RecipientDashboard() {
                   <motion.div key={claim.id} initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: i * 0.07 }}
                     className="bg-white rounded-2xl border border-gray-100 shadow-sm p-4 flex items-center gap-4">
                     {claim.food.imageUrl && (
-                      <img src={claim.food.imageUrl} alt={claim.food.title} className="w-16 h-16 rounded-xl object-cover flex-shrink-0" />
+                      <img
+                        src={resolveAssetUrl(claim.food.imageUrl)}
+                        alt={claim.food.title}
+                        onError={(e) => { (e.currentTarget as HTMLElement).style.display = 'none'; }}
+                        className="w-16 h-16 rounded-xl object-cover flex-shrink-0"
+                      />
                     )}
+
                     <div className="flex-1 min-w-0">
                       <div className="font-medium text-[#1c1c1e] text-sm">{claim.food.title}</div>
                       <div className="text-xs text-[#6b7280] flex items-center gap-1 mt-0.5">
