@@ -12,9 +12,22 @@ const uploadFoodImage = async (req, res) => {
             return res.status(400).json({ success: false, message: "Invalid image file. Only JPEG, PNG, or WebP are allowed" });
         }
 
-        // Return a relative URL the client can pass to createFood's imageUrl.
-        const url = `/uploads/foods/${req.file.filename}`;
-        res.status(201).json({ success: true, data: { url, filename: req.file.filename, size: req.file.size } });
+        // Return full URL so external frontends (e.g. Vercel) can load directly from Render
+        const proto = req.headers["x-forwarded-proto"] || req.protocol || "https";
+        const host = req.get("host");
+        const fullUrl = host ? `${proto}://${host}/uploads/foods/${req.file.filename}` : `/uploads/foods/${req.file.filename}`;
+        const relativeUrl = `/uploads/foods/${req.file.filename}`;
+
+        res.status(201).json({
+            success: true,
+            data: {
+                url: fullUrl,
+                relativeUrl,
+                filename: req.file.filename,
+                size: req.file.size,
+            },
+        });
+
     } catch (err) {
         res.status(400).json({ success: false, message: err.message });
     }

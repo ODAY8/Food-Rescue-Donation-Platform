@@ -90,9 +90,14 @@ app.use(
     express.static(ABS_UPLOAD_DIR, {
         dotfiles: "deny",
         index: false,
-        setHeaders: (res) => res.setHeader("X-Content-Type-Options", "nosniff"),
+        setHeaders: (res) => {
+            res.setHeader("X-Content-Type-Options", "nosniff");
+            res.setHeader("Access-Control-Allow-Origin", "*");
+            res.setHeader("Cross-Origin-Resource-Policy", "cross-origin");
+        },
     })
 );
+
 
 app.use("/", routes);
 

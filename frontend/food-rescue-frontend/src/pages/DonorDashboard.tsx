@@ -10,7 +10,9 @@ import { useAuth } from '../context/AuthContext';
 import { useToast } from '../hooks/useToast';
 import { foodApi, type FoodItem, type CreateFoodBody } from '../services/foodApi';
 import { donationApi, type Donation } from '../services/donationApi';
+import { resolveAssetUrl } from '../services/apiClient';
 import { useApi } from '../hooks/useApi';
+
 
 const QUICK_ACTIONS = [
   { label: 'AI Expiry Prediction', to: '/browse', icon: Sparkles, desc: 'See AI risk scores on every listing' },
@@ -235,7 +237,14 @@ export default function DonorDashboard() {
               return (
                 <motion.div key={f.id} initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: i * 0.04 }}
                   className="bg-white rounded-2xl border border-gray-100 shadow-sm p-4 flex items-center gap-4">
-                  {f.imageUrl && <img src={f.imageUrl} alt={f.title} className="w-14 h-14 rounded-xl object-cover flex-shrink-0" />}
+                  {f.imageUrl && (
+                    <img
+                      src={resolveAssetUrl(f.imageUrl)}
+                      alt={f.title}
+                      onError={(e) => { (e.currentTarget as HTMLElement).style.display = 'none'; }}
+                      className="w-14 h-14 rounded-xl object-cover flex-shrink-0"
+                    />
+                  )}
                   <div className="flex-1 min-w-0">
                     <div className="font-medium text-[#1c1c1e] text-sm truncate">{f.title}</div>
                     <div className="text-xs text-[#6b7280]">{f.quantity} {f.unit} · {f.pickupWindow}</div>
@@ -265,7 +274,15 @@ export default function DonorDashboard() {
               return (
                 <motion.div key={d.id} initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: i * 0.04 }}
                   className="bg-white rounded-2xl border border-gray-100 shadow-sm p-4 flex items-center gap-4 opacity-80">
-                  {d.food.imageUrl && <img src={d.food.imageUrl} alt={d.food.title} className="w-14 h-14 rounded-xl object-cover flex-shrink-0 grayscale" />}
+                  {d.food.imageUrl && (
+                    <img
+                      src={resolveAssetUrl(d.food.imageUrl)}
+                      alt={d.food.title}
+                      onError={(e) => { (e.currentTarget as HTMLElement).style.display = 'none'; }}
+                      className="w-14 h-14 rounded-xl object-cover flex-shrink-0 grayscale"
+                    />
+                  )}
+
                   <div className="flex-1 min-w-0">
                     <div className="font-medium text-[#1c1c1e] text-sm truncate">{d.food.title}</div>
                     <div className="text-xs text-[#6b7280]">{d.food.servings} servings · {new Date(d.createdAt).toLocaleDateString()}</div>

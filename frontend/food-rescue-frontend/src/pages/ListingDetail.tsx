@@ -11,7 +11,9 @@ import { useToast } from '../hooks/useToast';
 import { useAuth } from '../context/AuthContext';
 import { foodApi } from '../services/foodApi';
 import { donationApi } from '../services/donationApi';
+import { resolveAssetUrl } from '../services/apiClient';
 import { useApi } from '../hooks/useApi';
+
 
 const categoryColors: Record<string, 'green' | 'orange' | 'blue' | 'gray'> = {
   Bakery: 'orange', Produce: 'green', Dairy: 'blue',
@@ -83,12 +85,27 @@ export default function ListingDetail() {
           <motion.div initial={{ opacity: 0, x: -20 }} animate={{ opacity: 1, x: 0 }} transition={{ duration: 0.4 }}>
             <div className="relative rounded-2xl overflow-hidden">
               {food.imageUrl ? (
-                <img src={food.imageUrl} alt={food.title} className="w-full h-72 object-cover" />
+                <img
+                  src={resolveAssetUrl(food.imageUrl)}
+                  alt={food.title}
+                  onError={(e) => {
+                    const parent = e.currentTarget.parentElement;
+                    if (parent) {
+                      e.currentTarget.style.display = 'none';
+                      const fallback = document.createElement('div');
+                      fallback.className = 'w-full h-72 bg-[#d8f3dc] flex items-center justify-center text-[#2d6a4f] text-4xl font-bold rounded-2xl';
+                      fallback.textContent = food.title[0] || 'F';
+                      parent.appendChild(fallback);
+                    }
+                  }}
+                  className="w-full h-72 object-cover"
+                />
               ) : (
                 <div className="w-full h-72 bg-[#d8f3dc] flex items-center justify-center text-[#2d6a4f] text-4xl font-bold rounded-2xl">
                   {food.title[0]}
                 </div>
               )}
+
               <div className="absolute top-3 left-3">
                 <Badge label={food.category} color={categoryColors[food.category] ?? 'gray'} />
               </div>

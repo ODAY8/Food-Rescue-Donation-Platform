@@ -1,7 +1,9 @@
+import { useState } from 'react';
 import { motion } from 'framer-motion';
 import { Clock, MapPin, Users } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import type { FoodItem } from '../../services/foodApi';
+import { resolveAssetUrl } from '../../services/apiClient';
 import Badge from '../ui/Badge';
 
 interface FoodCardProps {
@@ -31,6 +33,7 @@ const categoryColors: Record<string, 'green' | 'orange' | 'blue' | 'gray'> = {
 const urgencyClass = { red: 'text-red-500', orange: 'text-orange-500', green: 'text-[#2d6a4f]' };
 
 export default function FoodCard({ food }: FoodCardProps) {
+  const [imgError, setImgError] = useState(false);
   const isClaimed = food.status !== 'AVAILABLE';
   const urg = urgencyColor(food.expiryDate);
 
@@ -41,14 +44,19 @@ export default function FoodCard({ food }: FoodCardProps) {
       className="bg-white rounded-2xl overflow-hidden border border-gray-100 shadow-sm flex flex-col"
     >
       <Link to={`/listing/${food.id}`} className="block relative">
-        {food.imageUrl ? (
-          <img src={food.imageUrl} alt={food.title}
-            className={`w-full h-48 object-cover transition-transform duration-300 hover:scale-105 ${isClaimed ? 'opacity-60 grayscale' : ''}`} />
+        {food.imageUrl && !imgError ? (
+          <img
+            src={resolveAssetUrl(food.imageUrl)}
+            alt={food.title}
+            onError={() => setImgError(true)}
+            className={`w-full h-48 object-cover transition-transform duration-300 hover:scale-105 ${isClaimed ? 'opacity-60 grayscale' : ''}`}
+          />
         ) : (
           <div className={`w-full h-48 bg-[#d8f3dc] flex items-center justify-center text-[#2d6a4f] text-4xl font-bold ${isClaimed ? 'opacity-60' : ''}`}>
-            {food.title[0]}
+            {food.title[0] || 'F'}
           </div>
         )}
+
         {isClaimed && (
           <div className="absolute inset-0 flex items-center justify-center">
             <span className="bg-black/60 text-white text-xs font-semibold px-3 py-1 rounded-full uppercase tracking-wide">
