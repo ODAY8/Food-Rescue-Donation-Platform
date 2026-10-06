@@ -29,7 +29,7 @@ export default function Footer() {
           <ul className="space-y-2 text-sm text-gray-300">
             <li><Link to="/auth?mode=signup" className="hover:text-white transition-colors">Register as Donor</Link></li>
             <li><Link to="/auth?mode=signup" className="hover:text-white transition-colors">Register as NGO</Link></li>
-            <li><Link to="/auth?mode=signup" className="hover:text-white transition-colors">Volunteer</Link></li>
+            <li><Link to="/browse" className="hover:text-white transition-colors">Find Food Near You</Link></li>
           </ul>
         </div>
       </div>
