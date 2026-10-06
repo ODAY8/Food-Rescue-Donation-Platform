@@ -1,7 +1,7 @@
 import { motion, useInView } from 'framer-motion';
 import { useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { ArrowRight, Leaf, ShoppingBag, Heart, Truck } from 'lucide-react';
+import { ArrowRight, Leaf, ShoppingBag, Heart, QrCode } from 'lucide-react';
 import PageWrapper from '../components/layout/PageWrapper';
 import Button from '../components/ui/Button';
 import StatCounter from '../components/shared/StatCounter';
@@ -28,7 +28,7 @@ function RevealSection({ children, className = '' }: { children: React.ReactNode
 const HOW_IT_WORKS = [
   { icon: ShoppingBag, title: 'Donors Post Surplus', desc: 'Restaurants, stores, and event organizers list surplus food with pickup details in under 2 minutes.' },
   { icon: Heart, title: 'NGOs Claim Listings', desc: 'Shelters and food banks browse available food and claim what they need with one click.' },
-  { icon: Truck, title: 'Volunteers Deliver', desc: 'Volunteers coordinate pickup and delivery, ensuring food reaches people before it expires.' },
+  { icon: QrCode, title: 'Direct NGO Pickup', desc: 'Claiming NGOs collect food directly from donors at the scheduled time, verifying handover with instant QR code scan.' },
 ];
 
 export default function Landing() {
@@ -88,7 +88,7 @@ export default function Landing() {
                 <span className="text-[#f4845f]">Save the Planet.</span>
               </h1>
               <p className="text-lg text-[#6b7280] mb-8 leading-relaxed max-w-md">
-                We connect restaurants, grocery stores, and event organizers who have surplus food with NGOs, shelters, and volunteers who can put it to good use.
+                We connect restaurants, grocery stores, and event organizers who have surplus food directly with verified NGOs and shelters who collect and distribute it.
               </p>
               <div className="flex flex-wrap gap-3">
                 <Button size="lg" onClick={() => navigate('/auth?mode=signup&role=donor')}>

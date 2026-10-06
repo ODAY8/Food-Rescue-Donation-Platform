@@ -1,6 +1,6 @@
 export type FoodCategory = 'Produce' | 'Bakery' | 'Dairy' | 'Cooked Meals' | 'Packaged' | 'Beverages';
 export type ListingStatus = 'available' | 'claimed' | 'picked_up' | 'expired';
-export type UserRole = 'donor' | 'recipient' | 'volunteer';
+export type UserRole = 'donor' | 'recipient';
 
 export interface Listing {
   id: string;
@@ -35,7 +35,7 @@ export const MOCK_STATS = {
   mealsSaved: 142830,
   activeDonors: 1240,
   ngoPartners: 318,
-  volunteersActive: 892,
+  communitiesServed: 892,
   citiesCovered: 47,
   co2Saved: 89.4,
 };
@@ -165,7 +165,7 @@ export const MOCK_RECIPIENT_CLAIMS = [
 export const MOCK_USERS: User[] = [
   { id: 'u1', name: 'Marco Rossi', email: 'marco@trattoria.com', role: 'donor', organization: 'Trattoria Bella', avatar: 'MR', joinedAt: '2024-01-15' },
   { id: 'u2', name: 'Aisha Patel', email: 'aisha@hopeshelf.org', role: 'recipient', organization: 'Hope Shelf NGO', avatar: 'AP', joinedAt: '2024-02-20' },
-  { id: 'u3', name: 'James Okafor', email: 'james@vol.org', role: 'volunteer', organization: 'City Volunteers', avatar: 'JO', joinedAt: '2024-03-10' },
+  { id: 'u3', name: 'James Okafor', email: 'james@communityfood.org', role: 'recipient', organization: 'Community Food Bank', avatar: 'JO', joinedAt: '2024-03-10' },
 ];
 
 export const IMPACT_TIMELINE = [
