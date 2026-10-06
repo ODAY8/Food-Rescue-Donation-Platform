@@ -9,6 +9,11 @@ required.forEach((key) => {
     }
 });
 
+if (process.env.DATABASE_URL && !process.env.DATABASE_URL.startsWith("postgres://") && !process.env.DATABASE_URL.startsWith("postgresql://")) {
+    console.error(`❌ Invalid DATABASE_URL: It must start with postgresql:// or postgres://. Current value starts with: "${process.env.DATABASE_URL.slice(0, 15)}"`);
+}
+
+
 module.exports = {
     PORT: process.env.PORT || 5000,
     DATABASE_URL: process.env.DATABASE_URL,
