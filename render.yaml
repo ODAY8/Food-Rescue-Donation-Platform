@@ -28,4 +28,4 @@ services:
       - key: AI_CLASSIFICATION_MODEL
         value: qwen/qwen3.8-27b
       - key: CLIENT_URL
-        value: "*"
+        value: "https://www.foodrescue.cfd,https://foodrescue.cfd"
