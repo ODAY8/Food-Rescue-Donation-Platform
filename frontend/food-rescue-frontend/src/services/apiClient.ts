@@ -1,4 +1,23 @@
-const BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000/api';
+export const PRODUCTION_API_URL = 'https://food-rescue-donation-platform.onrender.com';
+export const DEVELOPMENT_API_URL = 'http://localhost:5000';
+
+/**
+ * Resolves the API base URL.
+ * In production builds (Vercel): defaults to Render backend https://food-rescue-donation-platform.onrender.com/api
+ * In development builds: defaults to http://localhost:5000/api
+ * Can always be overridden by VITE_API_URL in environment variables.
+ */
+function resolveApiBaseUrl(): string {
+  const envUrl = import.meta.env.VITE_API_URL;
+  const rawUrl = (envUrl && typeof envUrl === 'string' && envUrl.trim())
+    ? envUrl.trim()
+    : (import.meta.env.PROD ? PRODUCTION_API_URL : DEVELOPMENT_API_URL);
+
+  const clean = rawUrl.replace(/\/+$/, '');
+  return clean.endsWith('/api') ? clean : `${clean}/api`;
+}
+
+export const BASE_URL = resolveApiBaseUrl();
 
 export const tokenStorage = {
   get: () => localStorage.getItem('fr_token'),

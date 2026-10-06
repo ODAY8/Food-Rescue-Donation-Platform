@@ -6,6 +6,7 @@ import PageWrapper from '../components/layout/PageWrapper';
 import StatCounter from '../components/shared/StatCounter';
 import Button from '../components/ui/Button';
 import { useApi } from '../hooks/useApi';
+import { BASE_URL } from '../services/apiClient';
 
 function RevealSection({ children, className = '' }: { children: React.ReactNode; className?: string }) {
   const ref = useRef<HTMLDivElement>(null);
@@ -34,7 +35,7 @@ export default function About() {
   const navigate = useNavigate();
 
   const { data: statsRes } = useApi(async () => {
-    const res = await fetch(`${import.meta.env.VITE_API_URL || 'http://localhost:5000/api'}/analytics/public`);
+    const res = await fetch(`${BASE_URL}/analytics/public`);
     return res.json();
   }, []);
   const stats = statsRes?.data;

@@ -15,26 +15,46 @@ const app = express();
 // Security headers — allow cross-origin resource policy for uploaded images
 app.use(helmet({ crossOriginResourcePolicy: { policy: "cross-origin" } }));
 
-// CORS — support configured CLIENT_URL, Vercel deployments, and localhost
-const rawOrigins = (process.env.CLIENT_URL || "http://localhost:5173")
+// CORS — explicit allowed origins for foodrescue.cfd, Vercel, and local dev
+const STATIC_ALLOWED_ORIGINS = [
+    "https://www.foodrescue.cfd",
+    "https://foodrescue.cfd",
+    "http://localhost:5173",
+    "http://localhost:3000",
+    "http://localhost:5000",
+    "http://127.0.0.1:5173",
+    "http://127.0.0.1:3000",
+];
+
+const envOrigins = (process.env.CLIENT_URL || "")
     .split(",")
-    .map(o => o.trim())
-    .filter(Boolean);
+    .map(o => o.trim().replace(/\/+$/, ""))
+    .filter(o => o && o !== "*");
+
+const allowedOriginsSet = new Set([...STATIC_ALLOWED_ORIGINS, ...envOrigins]);
+
+const isOriginAllowed = (origin) => {
+    if (!origin) return true; // non-browser requests (health checks, curl, mobile)
+    if (allowedOriginsSet.has(origin)) return true;
+    if (/^https?:\/\/(www\.)?foodrescue\.cfd$/.test(origin)) return true;
+    if (origin.endsWith(".vercel.app")) return true;
+    if (/^http:\/\/localhost(:\d+)?$/.test(origin) || /^http:\/\/127\.0\.0\.1(:\d+)?$/.test(origin)) return true;
+    return false;
+};
 
 app.use(cors({
     origin: (origin, callback) => {
-        if (!origin) return callback(null, true);
-        if (
-            rawOrigins.includes(origin) ||
-            rawOrigins.includes("*") ||
-            origin.endsWith(".vercel.app") ||
-            origin.startsWith("http://localhost:")
-        ) {
+        if (isOriginAllowed(origin)) {
             return callback(null, true);
         }
         return callback(new Error(`CORS policy blocked request from ${origin}`));
     },
     credentials: true,
+    methods: ["GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"],
+    allowedHeaders: ["Content-Type", "Authorization", "X-Requested-With", "Accept", "Origin"],
+    exposedHeaders: ["Content-Range", "X-Content-Range"],
+    maxAge: 86400,
+    optionsSuccessStatus: 204,
 }));
 
 // General API rate limit

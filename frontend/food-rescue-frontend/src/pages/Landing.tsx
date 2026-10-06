@@ -8,6 +8,7 @@ import StatCounter from '../components/shared/StatCounter';
 import FoodCard from '../components/shared/FoodCard';
 import { useApi } from '../hooks/useApi';
 import { foodApi, type FoodItem } from '../services/foodApi';
+import { BASE_URL } from '../services/apiClient';
 
 function RevealSection({ children, className = '' }: { children: React.ReactNode; className?: string }) {
   const ref = useRef<HTMLDivElement>(null);
@@ -36,7 +37,7 @@ export default function Landing() {
 
   const { data: foodsRes, loading: foodsLoading } = useApi(() => foodApi.getAll({ status: 'AVAILABLE', limit: 3 }), []);
   const { data: statsRes } = useApi(async () => {
-    const res = await fetch(`${import.meta.env.VITE_API_URL || 'http://localhost:5000/api'}/analytics/public`);
+    const res = await fetch(`${BASE_URL}/analytics/public`);
     return res.json();
   }, []);
 
