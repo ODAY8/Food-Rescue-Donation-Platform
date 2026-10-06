@@ -143,7 +143,9 @@
     "addItem": "Add Item",
     "editItem": "Edit Item",
     "itemName": "Item name",
+    "description": "Description",
     "category": "Category",
+
     "quantity": "Quantity",
     "unit": "Unit",
     "expiryDate": "Expiry date",

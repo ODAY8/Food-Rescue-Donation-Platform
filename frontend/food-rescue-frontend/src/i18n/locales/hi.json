@@ -143,7 +143,9 @@
     "addItem": "आइटम जोड़ें",
     "editItem": "आइटम संपादित करें",
     "itemName": "आइटम का नाम",
+    "description": "विवरण",
     "category": "श्रेणी",
+
     "quantity": "मात्रा",
     "unit": "इकाई",
     "expiryDate": "समाप्ति तिथि",
